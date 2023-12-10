@@ -1,6 +1,7 @@
 #include "s21_helpers.h"
 
 #include <stdio.h>
+#include <string.h>
 
 #include "s21_decimal.h"
 
@@ -12,6 +13,7 @@
 
 /* bits[3] [31] [30...24] [23...16] [15...0]
  *        |sign|null     |exp      |null    |
+ * TODO: Signs
  */
 
 unsigned getBit(s21_decimal value, unsigned num) {
@@ -41,6 +43,21 @@ unsigned getSign(s21_decimal value) { return value.bits[3] >> 31; }
 
 void setSign(s21_decimal *value, unsigned sign) {
   setBit(value, 32 * 4 - 1, sign);
+}
+
+void divWithRemainder(s21_decimal divisible, s21_decimal divisor, s21_decimal *result, s21_decimal *remainder) {
+
+}
+
+void alignmentExp(s21_decimal *value1, s21_decimal *value2) {
+  // TODO: 
+  unsigned exp1 = getExp(*value1);
+  unsigned exp2 = getExp(*value2);
+  if (exp1 > exp2) {
+    s21_mul(*value1, DECIMALTEN, value1);
+  } else if (exp2 > exp1) {
+  } else {
+  }
 }
 
 int shiftLeft(s21_decimal *num, int shift) {

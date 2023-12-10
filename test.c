@@ -5,14 +5,14 @@
 #include "s21_helpers.h"
 
 int main() {
-  s21_decimal num1 = {};
+  s21_decimal num1 = {.bits = {10, 0, 0, 0}};
   s21_decimal num2 = {};
   s21_decimal res = {};
   // s21_mul(num1, num2, &res);
   setBit(&num1, 0, 1);
   int ec = 0;
   for (int i = 0; i < 96 && !ec; ++i) {
-    ec = shiftLeft(&num1, 2);
+    ec = shiftLeft(&num1, 32);
     print_decimal(num1);
   }
 

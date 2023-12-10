@@ -2,6 +2,10 @@
 #define S21_HELPERS_H
 
 #include "s21_decimal.h"
+#define DECIMALTEN          \
+  (s21_decimal) {           \
+    .bits = { 0, 0, 0, 10 } \
+  }
 
 unsigned getBit(s21_decimal value, unsigned num);
 void setBit(s21_decimal *value, unsigned num, unsigned bitValue);
