@@ -2,32 +2,39 @@
 
 #include <stdint.h>
 
-int getBit(s21_decimal value, int num) {
+#include "s21_helpers.h"
 
-} 
+/*
+  0 - OK
+  1 - число слишком велико или равно бесконечности
+  2 - число слишком мало или равно отрицательной бесконечности
+  3 - деление на 0
+*/
 
-void setBit(s21_decimal value, int num, int bitValue) {
-
+int s21_add(s21_decimal value_1, s21_decimal value_2, s21_decimal *result) {
+  int ec = 0;
+  unsigned carry = 0;
+  for (int bit = 0; bit < 3; ++bit) {
+    for (int i = 0; i < 32; ++i) {
+      unsigned b1 = getBit(value_1, bit * 32 + i);
+      unsigned b2 = getBit(value_2, bit * 32 + i);
+      setBit(result, bit * 32 + i, carry);
+      carry = (b1 + b2) > 1;
+    }
+  }
+  // Overflow
+  if (carry) ec = 1;
+  return ec;
 }
 
-int getExp(s21_decimal value) {
+int s21_mul(s21_decimal value_1, s21_decimal value_2, s21_decimal *result) {
+  s21_decimal numsForSumm[(sizeof(s21_decimal) - sizeof(unsigned)) * 8] = {};
+  int ec = 0;
+  for (int bit = 0; bit < (sizeof(s21_decimal) - sizeof(unsigned)) * 8; ++bit) {
+    if (getBit(value_2, bit)) {
+      numsForSumm[bit] = value_1;
+    }
+  }
 
-}
-
-void setExp(s21_decimal value, int exp) {
-
-}
-
-int getSign(s21_decimal value) {
-
-}
-
-void setSign(s21_decimal value, int sign) {
-  
-}
-
-int s21_add(s21_decimal value_1, s21_decimal value_2, s21_decimal *result)
-{
-
-  return 0;
+  return ec;
 }
