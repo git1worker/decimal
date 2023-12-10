@@ -5,19 +5,20 @@
 #include "s21_helpers.h"
 
 int main() {
-  s21_decimal num1 = {.bits = {10, 0, 0, 0}};
-  s21_decimal num2 = {};
+  s21_decimal num1 = {.bits = {UINTMAX, 234234, 0, 0}};
+  s21_decimal num2 = {.bits = {UINTMAX, 1233, 0, 0}};
   s21_decimal res = {};
   // s21_mul(num1, num2, &res);
-  setBit(&num1, 0, 1);
-  int ec = 0;
-  for (int i = 0; i < 96 && !ec; ++i) {
-    ec = shiftLeft(&num1, 32);
-    print_decimal(num1);
-  }
+  print_decimal(num1);
+  print_decimal(num2);
+  // s21_add(num1, num2, &res);
+  s21_sub(num1, num2, &res);
+  print_decimal(res);
 
   // printf("%d\n", getSign(num));
-  // setSign(&num, 1);
+  // setSign(&num,
+  // 1);11100011100010100100000000000000000000000000000000
+  //    111000111000101001                               0
   // printf("%d\n", getSign(num));
   // setSign(&num, 0);
   // printf("%d\n", getSign(num));

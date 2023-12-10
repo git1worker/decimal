@@ -5,23 +5,17 @@
 
 #include "s21_decimal.h"
 
-#define INTMAX 0x7fffffff
-#define TRUE 1
-#define FALSE 0
-#define UINTMAX 0xffffffff
-#define EXPMASK (0b00000000111111110000000000000000)
-
 /* bits[3] [31] [30...24] [23...16] [15...0]
  *        |sign|null     |exp      |null    |
  * TODO: Signs
  */
 
-unsigned getBit(s21_decimal value, unsigned num) {
+bit_t getBit(s21_decimal value, unsigned num) {
   return (value.bits[num / 32] >> num % 32) & 1;
 }
 
-void setBit(s21_decimal *value, unsigned num, unsigned bitValue) {
-  unsigned corrBit = 1 << (num % 32);
+void setBit(s21_decimal *value, unsigned num, bit_t bitValue) {
+  bit_t corrBit = 1 << (num % 32);
   if (bitValue) {
     *((*value).bits + (num / 32)) = *((*value).bits + (num / 32)) | corrBit;
   } else {
@@ -39,18 +33,17 @@ void setExp(s21_decimal *value, unsigned exp) {
   value->bits[3] = value->bits[3] | exp;
 }
 
-unsigned getSign(s21_decimal value) { return value.bits[3] >> 31; }
+bit_t getSign(s21_decimal value) { return value.bits[3] >> 31; }
 
-void setSign(s21_decimal *value, unsigned sign) {
+void setSign(s21_decimal *value, bit_t sign) {
   setBit(value, 32 * 4 - 1, sign);
 }
 
-void divWithRemainder(s21_decimal divisible, s21_decimal divisor, s21_decimal *result, s21_decimal *remainder) {
-
-}
+void divWithRemainder(s21_decimal divisible, s21_decimal divisor,
+                      s21_decimal *result, s21_decimal *remainder) {}
 
 void alignmentExp(s21_decimal *value1, s21_decimal *value2) {
-  // TODO: 
+  // TODO:
   unsigned exp1 = getExp(*value1);
   unsigned exp2 = getExp(*value2);
   if (exp1 > exp2) {
