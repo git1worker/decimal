@@ -10,11 +10,137 @@
  * TODO: Signs
  */
 
-bit_t getBit(s21_decimal value, unsigned num) {
+int bigDecimalIsLess(big_decimal value1, big_decimal value2) {
+  bit_t rv = FALSE;
+  /* rv = 1 value1 < value2
+   * rv = 0 value1 > value2
+   * rv = 2 value1 == value2
+   */
+  bit_t sign1 = getSign(value1);
+  bit_t sign2 = getSign(value2);
+  // TODO
+  if (sign1 == sign2) {
+    alignmentExp(&value1, &value2);
+    /* Exponents already are equal */
+    bit_t br = TRUE;
+    for (int i = (sizeof(big_decimal) - sizeof(unsigned)) * 8 - 1; i > 0 && br;
+         --i) {
+      bit_t b1 = getBit(value1, i);
+      bit_t b2 = getBit(value2, i);
+      if (b1 == b2)
+        continue;
+      else if (b1 < b2)
+        rv = TRUE;
+      br = FALSE;
+    }
+    if (br) /* If values is equal */
+      rv = 2;
+  } else {
+    if (sign1 > sign2)
+      rv = TRUE;
+    else
+      rv = FALSE;
+  }
+  return rv;
+}
+
+int bigDecimalIsGreater(big_decimal value1, big_decimal value2) {
+  int rv = bigDecimalIsLess(value1, value2);
+  if (rv == 1)
+    rv = 0;
+  else if (!rv)
+    rv = 1;
+  return rv;
+}
+
+void mulToBigDecimal(big_decimal value1, big_decimal value2,
+                     big_decimal *result) {
+  /* It is assumed that the values will not exceed s21_decimal */
+  big_decimal numForSumm = {};
+  big_decimal outcome = {};
+  bit_t sign1 = getSign(value1);
+  bit_t sign2 = getSign(value2);
+  setSign(result, sign1 ^ sign2);
+  for (int bit = 0; bit < (sizeof(big_decimal) - sizeof(unsigned)) * 8; ++bit) {
+    if (getBit(value2, bit)) {
+      numForSumm = value1;
+      shiftLeft(&(numForSumm), bit);
+      helperSummSub(outcome, numForSumm, &outcome);
+    }
+  }
+  *result = outcome;
+}
+
+int helperSummSub(big_decimal value1, big_decimal value2, big_decimal *result) {
+
+  /* It is assumed that the exponents are equal */
+  int ec = 0;
+  big_decimal result_ = *result;
+  bit_t sign1 = getSign(value1);
+  bit_t sign2 = getSign(value2);
+  if (sign1 == sign2) {
+    unsigned carry = 0;
+    for (int bit = 0; bit < 6; ++bit) {
+      for (int i = 0; i < 32; ++i) {
+        bit_t b1 = getBit(value1, bit * 32 + i);
+        bit_t b2 = getBit(value2, bit * 32 + i);
+        bit_t b3 = b1 + b2 + carry;
+        carry = b3 / 2;
+        b3 = b3 % 2;
+        setBit(&result_, bit * 32 + i, b3);
+      }
+    }
+    setSign(&result_, sign1);
+    // Overflow
+    if (carry) ec = 1;
+  } else {
+    // TODO: Less then
+    bit_t sign;
+    big_decimal *majorValue, *minorValue;
+
+    big_decimal tmpValue1 = value1;
+    big_decimal tmpValue2 = value2;
+    setSign(&tmpValue1, 0);
+    setSign(&tmpValue2, 0);
+
+    if (/* Abs value */ bigDecimalIsGreater(tmpValue1, tmpValue2) == 1) {
+      sign = getSign(value1);
+      majorValue = &value1;
+      minorValue = &value2;
+    } else {
+      sign = getSign(value2);
+      if (/* Values are equal */ bigDecimalIsGreater(tmpValue1, tmpValue2) == 2)
+        sign = FALSE;
+      majorValue = &value2;
+      minorValue = &value1;
+    }
+    setSign(&result_, sign);
+    bit_t loan = 0;
+    for (int bit = 0; bit < 6; ++bit) {
+      for (int i = 0; i < 32; ++i) {
+        bit_t b1 = getBit(*majorValue, bit * 32 + i);
+        bit_t b2 = getBit(*minorValue, bit * 32 + i);
+        bit_t b3;
+        if (b1 > b2)
+          b3 = !loan, loan = FALSE;
+        else if (b1 == b2)
+          b3 = loan;
+        else
+          b3 = !loan, loan = TRUE;
+        setBit(&result_, bit * 32 + i, b3);
+      }
+    }
+  }
+  if (!ec) *result = result_;
+}
+
+bit_t getBit(big_decimal value, unsigned num) {
+  /* Tested */
   return (value.bits[num / 32] >> num % 32) & 1;
 }
 
-void setBit(s21_decimal *value, unsigned num, bit_t bitValue) {
+void setBit(big_decimal *value, unsigned num, bit_t bitValue) {
+  /* Tested */
   bit_t corrBit = 1 << (num % 32);
   if (bitValue) {
     *((*value).bits + (num / 32)) = *((*value).bits + (num / 32)) | corrBit;
@@ -25,49 +151,59 @@ void setBit(s21_decimal *value, unsigned num, bit_t bitValue) {
   }
 }
 
-unsigned getExp(s21_decimal value) { return (value.bits[3] & EXPMASK) >> 16; }
+unsigned getExp(big_decimal value) {
+  /* Tested */
+  return (value.bits[6] & EXPMASK) >> 16;
+}
 
-void setExp(s21_decimal *value, unsigned exp) {
+void setExp(big_decimal *value, unsigned exp) {
+  /* Tested */
   exp = exp << 16;
-  value->bits[3] = value->bits[3] & (UINTMAX - EXPMASK);
-  value->bits[3] = value->bits[3] | exp;
+  value->bits[6] = value->bits[6] & (UINTMAX - EXPMASK);
+  value->bits[6] = value->bits[6] | exp;
 }
 
-bit_t getSign(s21_decimal value) { return value.bits[3] >> 31; }
-
-void setSign(s21_decimal *value, bit_t sign) {
-  setBit(value, 32 * 4 - 1, sign);
+bit_t getSign(big_decimal value) {
+  /* Tested */
+  return value.bits[6] >> 31;
 }
 
-void divWithRemainder(s21_decimal divisible, s21_decimal divisor,
-                      s21_decimal *result, s21_decimal *remainder) {}
+void setSign(big_decimal *value, bit_t sign) {
+  /* Tested */
+  setBit(value, 32 * 7 - 1, sign);
+}
 
-void alignmentExp(s21_decimal *value1, s21_decimal *value2) {
-  // TODO:
+void alignmentExp(big_decimal *value1, big_decimal *value2) {
   unsigned exp1 = getExp(*value1);
   unsigned exp2 = getExp(*value2);
-  if (exp1 > exp2) {
-    s21_mul(*value1, DECIMALTEN, value1);
-  } else if (exp2 > exp1) {
-  } else {
+  while (exp1 < exp2) {
+    mulToBigDecimal(*value1, DECIMALTEN, value1);
+    setExp(value1, getExp(*value1) + 1);
+    exp1 = getExp(*value1);
+  }
+  while (exp2 < exp1) {
+    mulToBigDecimal(*value2, DECIMALTEN, value2);
+    setExp(value2, getExp(*value2) + 1);
+    exp2 = getExp(*value2);
   }
 }
 
-int shiftLeft(s21_decimal *num, int shift) {
+int shiftLeft(big_decimal *num, int shift) {
+  /* Tested */
   int ec = 0;
-  s21_decimal converted = *num;
+  big_decimal converted = *num;
   /* ec = 0 OK
    * ec = 1 Overflow
    */
   while (shift != 0 && !ec) {
-    if (getBit(converted, 95))
+    if (getBit(converted, 32 * 6 - 1))
       ec = 1;
     else {
-      converted.bits[2] = converted.bits[2] << 1;
-      if (getBit(converted, 63)) setBit(&converted, 64, 1);
-      converted.bits[1] = converted.bits[1] << 1;
-      if (getBit(converted, 31)) setBit(&converted, 32, 1);
-      converted.bits[0] = converted.bits[0] << 1;
+      for (int i = 5; i != -1; --i) {
+        if (getBit(converted, (i + 1) * 32 - 1))
+          setBit(&converted, (i + 1) * 32, 1);
+        converted.bits[i] = converted.bits[i] << 1;
+      }
       --shift;
     }
   }
@@ -114,11 +250,30 @@ char *citoa(unsigned long num, char *str, int base) {
   return str;
 }
 
-void print_decimal(s21_decimal num) {
+#define insertOneAtBegin(buff, _charForInsert) \
+  {                                            \
+    char currChar = buff[0];                   \
+    buff[0] = _charForInsert;                  \
+    char nextChar;                             \
+    int i_ = 1;                                \
+    do {                                       \
+      nextChar = buff[i_];                     \
+      buff[i_] = currChar;                     \
+      currChar = nextChar;                     \
+      ++i_;                                    \
+    } while (buff[i_] != '\0');                \
+    buff[i_] = nextChar;                       \
+    buff[i_ + 1] = '\0';                       \
+  }
+
+void print_decimal(big_decimal num) {
   char buffer[40] = {};
-  for (int i = 2; i > -1; --i) {
+  for (int i = 6; i > -1; --i) {
     citoa(num.bits[i], buffer, 2);
-    printf("|%32s", buffer);
+    while (strlen(buffer) < 32) {
+      insertOneAtBegin(buffer, '0');
+    }
+    printf("|%s", buffer);
   }
   putchar('|');
   putchar('\n');

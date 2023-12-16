@@ -2,10 +2,11 @@
 #define S21_HELPERS_H
 
 #include "s21_decimal.h"
-#define DECIMALTEN          \
-  (s21_decimal) {           \
-    .bits = { 0, 0, 0, 10 } \
+#define DECIMALTEN                   \
+  (big_decimal) {                    \
+    .bits = { 10, 0, 0, 0, 0, 0, 0 } \
   }
+
 #define INTMAX 0x7fffffff
 #define TRUE 1
 #define FALSE 0
@@ -14,14 +15,24 @@
 
 typedef unsigned bit_t;
 
-bit_t getBit(s21_decimal value, unsigned num);
-void setBit(s21_decimal *value, unsigned num, bit_t bitValue);
-unsigned getExp(s21_decimal value);
-void setExp(s21_decimal *value, unsigned exp);
-bit_t getSign(s21_decimal value);
-void setSign(s21_decimal *value, bit_t sign);
+typedef struct {
+  unsigned bits[7];
+} big_decimal;
+
+bit_t getBit(big_decimal value, unsigned num);
+void setBit(big_decimal *value, unsigned num, bit_t bitValue);
+int helperSummSub(big_decimal value1, big_decimal value2, big_decimal *result);
+unsigned getExp(big_decimal value);
+void setExp(big_decimal *value, unsigned exp);
+bit_t getSign(big_decimal value);
+void setSign(big_decimal *value, bit_t sign);
 void print_binary(unsigned int number);
-int shiftLeft(s21_decimal *num, int shift);
-void print_decimal(s21_decimal num);
+int shiftLeft(big_decimal *num, int shift);
+void print_decimal(big_decimal num);
+int bigDecimalIsLess(big_decimal value1, big_decimal value2);
+int bigDecimalIsGreater(big_decimal value1, big_decimal value2);
+void mulToBigDecimal(big_decimal value1, big_decimal value2,
+                     big_decimal *result);
+void alignmentExp(big_decimal *value1, big_decimal *value2);
 
 #endif
