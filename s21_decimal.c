@@ -14,14 +14,20 @@
 
 int s21_add(s21_decimal value_1, s21_decimal value_2, s21_decimal *result) {
   s21_decimal result_ = *result;
-  // bit_t sign1 = getSign(value_1);
-  // bit_t sign2 = getSign(value_2);
-  // if (sign1 == sign2) {
-  // } else {
-  //   // TODO:
-  // }
+  int rv = 0;
+  alignmentExp(&value_1, &value_2);
+  big_decimal bigValue1 = {}, bigValue2 = {}, bigResult = {};
+  toBigDecimal(value_1, &bigValue1);
+  toBigDecimal(value_2, &bigValue2);
 
-  return 0;
+  helperSummSub(bigValue1, bigValue2, &bigResult);
+
+  truncateZeroesAtTheEnd(&bigResult);
+
+  rv = fromBigDecimal(bigResult, &result_);
+  if (!rv)
+    *result = result_;
+  return rv;
 }
 // 10001011011111010010100011001011
 // 10001011011111010010100011001011
