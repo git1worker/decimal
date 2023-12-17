@@ -18,8 +18,11 @@ void truncateZeroesAtTheEnd(big_decimal *value) {
 }
 
 int longDivision(big_decimal value1, big_decimal value2, big_decimal *result) {
-  /* Searching for a number for the first digit in the quotient */
+  /* Searching for a number for the first digit in the quotient 
+   * Without handling exponents*/
   unsigned posFirstDigit = UINTMAX;
+  big_decimal result_ = *result;
+  int rv = 0;
   for (int i = 6 * 32 - 1; i >= 0 && posFirstDigit == UINTMAX; --i) {
     if (getBit(value1, i)) posFirstDigit = i;
   }
@@ -32,19 +35,46 @@ int longDivision(big_decimal value1, big_decimal value2, big_decimal *result) {
   setSign(&absValue2, 0);
   setExp(&absValue2, 0);
   unsigned posEndFirstDigit = posEndFirstDigit;
+  /* TODO: Need to handle situation when at the begin divisible < divisor (3 / 33) */
   while (br) {
     big_decimal tmpShifted = absValue1;
     shiftRight(&tmpShifted, posEndFirstDigit);
-    if (bigDecimalIsGreater(tmpShifted, absValue2))
+    if (bigDecimalIsGreater(tmpShifted, absValue2)) {
       br = FALSE;
+      setBit(&result_, 0, 1);
+      
+    }
     else {
-      if (posEndFirstDigit >= 0)
+      if (posEndFirstDigit > 0)
         --posEndFirstDigit;
       else /* TODO */;
     }
   }
-
-  /* */
+  setSign(&absValue2, 1);
+  big_decimal tmpValue = absValue1;
+  shiftRight(&tmpValue, posEndFirstDigit);
+  while (posEndFirstDigit > 0) {
+    shiftLeft(&result_, 1);
+    big_decimal tmpValue_;
+    /* Subtraction */
+    helperSummSub(tmpValue, absValue2, &tmpValue_);
+    --posEndFirstDigit;
+    // TODO to do refactor this part
+    if (posEndFirstDigit > 0) {
+      shiftLeft(&tmpValue_, 1);
+      setBit(&tmpValue_, 0, getBit(value1, posEndFirstDigit));
+      while (bigDecimalIsLess(tmpValue_, absValue2) == 1 && posEndFirstDigit > 0) {
+        --posEndFirstDigit;
+        shiftLeft(&tmpValue_, 1);
+        setBit(&tmpValue_, 0, getBit(value1, posEndFirstDigit));
+        shiftLeft(&result_, 0);
+      }
+      tmpValue = tmpValue_;
+    } else {
+      // TODO calculate the remains
+    }
+    
+  }
 }
 
 int divisionBigDecimal(big_decimal value1, big_decimal value2, big_decimal *result) {
