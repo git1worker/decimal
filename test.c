@@ -5,41 +5,40 @@
 #include "s21_helpers.h"
 
 int main() {
-  /* Initialzation in array bits is reversed. Pay attention!*/
-  big_decimal num1 = {.bits = {123456789, 123456789, 0, 0, 0, 0, 0}};
-  big_decimal num2 = {.bits = {123456789, 123456789, 0, 0, 0, 0, 0}};
+  /* Initialzation in the array of bits is reversed. Pay attention!*/
+  big_decimal dec = {.bits = {0b101101, 0, 0, 0, 0, 0, 0}};
+  big_decimal dec2 = {.bits = {0b101, 0, 0, 0, 0, 0}};
+  big_decimal dec3 = (big_decimal){.bits = {0b1001, 0, 0, 0, 0, 0}};
   big_decimal res = {};
-
-  
-
+  longDivision(dec, dec2, &res);
 
   return 0;
 }
 
 // print_decimal(num1);
-  // print_decimal(num2);
-  //  helperSummSub(num1, num2, &res); 1001001100101100000001011010010
-  //  print_decimal(res);              1001001100101100000001011010010
-  // setExp(&num1, 0);
-  // setExp(&num2, 1);
-  // printf("%d = 0\n", bigDecimalIsGreater(num1, num2));
-  // big_decimal num3 = {.bits = {123456789, 123456789, 0, 0, 0, 0, 0}};
-  // setExp(&num3, 1);
-  // setSign(&num3, 1);
-  // setSign(&num2, 1);
-  // printf("%d = 2\n", bigDecimalIsLess(num3, num2));
+// print_decimal(num2);
+//  helperSummSub(num1, num2, &res); 1001001100101100000001011010010
+//  print_decimal(res);              1001001100101100000001011010010
+// setExp(&num1, 0);
+// setExp(&num2, 1);
+// printf("%d = 0\n", bigDecimalIsGreater(num1, num2));
+// big_decimal num3 = {.bits = {123456789, 123456789, 0, 0, 0, 0, 0}};
+// setExp(&num3, 1);
+// setSign(&num3, 1);
+// setSign(&num2, 1);
+// printf("%d = 2\n", bigDecimalIsLess(num3, num2));
 
-  // big_decimal num4 = {.bits = {0, 0, 0, 0, 234234, 0, 0}};
-  // printf("%d = 1\n", bigDecimalIsLess(num2, num4));
-  // big_decimal num5 = {.bits = {0, 0, 0, 234234, 234234, 0, 0}};
-  // setSign(&num5, 1);
-  // printf("%d = 1\n", bigDecimalIsLess(num5, num2));
-  // big_decimal num6 = {.bits = {0, 0, 0, 0, 1233, 0, 0}};
-  // setExp(&num6, 1);
-  // printf("%d = 1\n", bigDecimalIsLess(num6, num2));
-  // big_decimal num7 = {.bits = {0, 0, 0, 0, 1233, 0, 0}};
-  // setExp(&num7, 2);
-  // printf("%d = 1\n", bigDecimalIsLess(num7, num6));
+// big_decimal num4 = {.bits = {0, 0, 0, 0, 234234, 0, 0}};
+// printf("%d = 1\n", bigDecimalIsLess(num2, num4));
+// big_decimal num5 = {.bits = {0, 0, 0, 234234, 234234, 0, 0}};
+// setSign(&num5, 1);
+// printf("%d = 1\n", bigDecimalIsLess(num5, num2));
+// big_decimal num6 = {.bits = {0, 0, 0, 0, 1233, 0, 0}};
+// setExp(&num6, 1);
+// printf("%d = 1\n", bigDecimalIsLess(num6, num2));
+// big_decimal num7 = {.bits = {0, 0, 0, 0, 1233, 0, 0}};
+// setExp(&num7, 2);
+// printf("%d = 1\n", bigDecimalIsLess(num7, num6));
 
 /*
 print ("{0:b}".format(

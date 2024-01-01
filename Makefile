@@ -27,6 +27,8 @@ cppcheck:
 	cppcheck --enable=all --suppress=missingIncludeSystem *.c
 
 test : clean check
-	${CMPL} ${FLAGS} -o test s21_decimal.c s21_helpers.c test.c
-	
+	${CMPL} ${FLAGS} -o test s21_decimal.c s21_helpers.c s21_test.c ${LIBS}
 
+	
+test2 : clean check
+	${CMPL} ${FLAGS} -o test2 s21_decimal.c s21_helpers.c test.c

@@ -13,20 +13,21 @@
 void truncateZeroesAtTheEnd(big_decimal *value) {
   // TODO:
   /* Exponent = 0
-   * longDivision
-  */
+   * longDivision */
+}
+
+void assignValue(big_decimal *v1, big_decimal v2) {
+  memcpy(v1, &v2, sizeof(v2));
 }
 
 int longDivision(big_decimal value1, big_decimal value2, big_decimal *result) {
-  /* Searching for a number for the first digit in the quotient 
-   * Without handling exponents*/
-  unsigned posFirstDigit = UINTMAX;
+  /* Searching for a number for the first digit in the quotient
+   * Without handling exponents and remainder */
+  int posFirstDigit = -1;
   big_decimal result_ = *result;
   int rv = 0;
-  for (int i = 6 * 32 - 1; i >= 0 && posFirstDigit == UINTMAX; --i) {
+  for (int i = 6 * 32 - 1; i >= 0 && posFirstDigit == -1; --i)
     if (getBit(value1, i)) posFirstDigit = i;
-  }
-  // TODO if posFirstDigit == UINTMAX here
   bit_t br = TRUE;
   big_decimal absValue1 = value1;
   setSign(&absValue1, 0);
@@ -34,55 +35,35 @@ int longDivision(big_decimal value1, big_decimal value2, big_decimal *result) {
   big_decimal absValue2 = value2;
   setSign(&absValue2, 0);
   setExp(&absValue2, 0);
-  unsigned posEndFirstDigit = posEndFirstDigit;
-  /* TODO: Need to handle situation when at the begin divisible < divisor (3 / 33) */
-  while (br) {
-    big_decimal tmpShifted = absValue1;
-    shiftRight(&tmpShifted, posEndFirstDigit);
-    if (bigDecimalIsGreater(tmpShifted, absValue2)) {
-      br = FALSE;
-      setBit(&result_, 0, 1);
-      
-    }
-    else {
-      if (posEndFirstDigit > 0)
-        --posEndFirstDigit;
-      else /* TODO */;
-    }
-  }
-  setSign(&absValue2, 1);
-  big_decimal tmpValue = absValue1;
-  shiftRight(&tmpValue, posEndFirstDigit);
-  while (posEndFirstDigit > 0) {
+  int currPosInNum = posFirstDigit;
+  big_decimal subtrahend = absValue2;
+  setSign(&subtrahend, 1);
+  /* TODO: Need to handle situation when at the begin divisible < divisor (3 /
+   * 33) */
+  big_decimal remainder = {};
+  while (currPosInNum >= 0) {
+    big_decimal tmpRes = {};
+    shiftLeft(&remainder, 1);
+    setBit(&remainder, 0, getBit(absValue1, currPosInNum));
+    helperSummSub(remainder, subtrahend, &tmpRes);
     shiftLeft(&result_, 1);
-    big_decimal tmpValue_;
-    /* Subtraction */
-    helperSummSub(tmpValue, absValue2, &tmpValue_);
-    --posEndFirstDigit;
-    // TODO to do refactor this part
-    if (posEndFirstDigit > 0) {
-      shiftLeft(&tmpValue_, 1);
-      setBit(&tmpValue_, 0, getBit(value1, posEndFirstDigit));
-      while (bigDecimalIsLess(tmpValue_, absValue2) == 1 && posEndFirstDigit > 0) {
-        --posEndFirstDigit;
-        shiftLeft(&tmpValue_, 1);
-        setBit(&tmpValue_, 0, getBit(value1, posEndFirstDigit));
-        shiftLeft(&result_, 0);
-      }
-      tmpValue = tmpValue_;
-    } else {
-      // TODO calculate the remains
+    if (!getSign(tmpRes)) { /* if the value is >= 0 */
+      setBit(&result_, 0, 1);
+      assignValue(&remainder, tmpRes);
     }
-    
+    --currPosInNum;
   }
+  assignValue(result, result_);
+  return rv;
 }
 
-int divisionBigDecimal(big_decimal value1, big_decimal value2, big_decimal *result) {
-  /* 
+int divisionBigDecimal(big_decimal value1, big_decimal value2,
+                       big_decimal *result) {
+  /*
    * rv = 0 Ok Without remainder
    * rv = 1 Ok With remainder
    * rv = 3 Division by zero
-  */
+   */
   int rv = 0;
   bit_t sign1 = getSign(value1);
   bit_t sign2 = getSign(value2);
@@ -91,7 +72,8 @@ int divisionBigDecimal(big_decimal value1, big_decimal value2, big_decimal *resu
   /* Check division by zero */
   setSign(&value2, 0);
   setExp(&value2, 0);
-  if (bigDecimalIsLess(value2, (big_decimal){.bits = {0, 0, 0, 0, 0, 0, 0}}) == 2) 
+  if (bigDecimalIsLess(value2, (big_decimal){.bits = {0, 0, 0, 0, 0, 0, 0}}) ==
+      2)
     rv = 3;
   else {
     setSign(&value2, sign2);
@@ -120,9 +102,13 @@ bit_t fromBigDecimal(big_decimal bigValue, s21_decimal *value) {
   bit_t rv = 0;
   bit_t sign = getSign(bigValue);
   /* Overflow check */
-  if (bigDecimalIsGreater(bigValue, (big_decimal){.bits = {{UINTMAX, UINTMAX, UINTMAX, 0, 0, 0, 0}}}) == 1) 
+  if (bigDecimalIsGreater(
+          bigValue,
+          (big_decimal){.bits = {UINTMAX, UINTMAX, UINTMAX, 0, 0, 0, 0}}) == 1)
     rv = 1;
-  else if (bigDecimalIsLess(bigValue, (big_decimal){.bits = {{UINTMAX, UINTMAX, UINTMAX, 0, 0, 0, (UINTMAX + 1) / 2}}}) == 1)
+  else if (bigDecimalIsLess(
+               bigValue, (big_decimal){.bits = {UINTMAX, UINTMAX, UINTMAX, 0, 0,
+                                                0, (UINTMAX + 1) / 2}}) == 1)
     rv = 2;
   else {
     setSign(&bigValue, sign);
@@ -146,8 +132,8 @@ int bigDecimalIsLess(big_decimal value1, big_decimal value2) {
     alignmentExp(&value1, &value2);
     /* Exponents already are equal */
     bit_t br = TRUE;
-    print_decimal(value1);
-    print_decimal(value2);
+    // print_decimal(value1);
+    // print_decimal(value2);
     for (int i = (sizeof(big_decimal) - sizeof(unsigned)) * 8 - 1; i >= 0 && br;
          --i) {
       bit_t b1 = getBit(value1, i);

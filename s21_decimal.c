@@ -15,22 +15,20 @@
 int s21_add(s21_decimal value_1, s21_decimal value_2, s21_decimal *result) {
   s21_decimal result_ = *result;
   int rv = 0;
-  alignmentExp(&value_1, &value_2);
+
   big_decimal bigValue1 = {}, bigValue2 = {}, bigResult = {};
   toBigDecimal(value_1, &bigValue1);
   toBigDecimal(value_2, &bigValue2);
-
+  alignmentExp(&bigValue1, &bigValue2);
   helperSummSub(bigValue1, bigValue2, &bigResult);
 
   truncateZeroesAtTheEnd(&bigResult);
 
   rv = fromBigDecimal(bigResult, &result_);
-  if (!rv)
-    *result = result_;
+  if (!rv) *result = result_;
   return rv;
 }
-// 10001011011111010010100011001011
-// 10001011011111010010100011001011
+
 int s21_sub(s21_decimal value_1, s21_decimal value_2, s21_decimal *result) {
   int ec = 0;
 
