@@ -6,8 +6,8 @@
 #include "s21_decimal.h"
 
 /* bits[3] [31] [30...24] [23...16] [15...0]
- *        |sign|null     |exp      |null    |
- * TODO: Signs
+ *        |sign|  null   |   exp   |  null  |
+ * Signs are processing before these functions
  */
 
 void truncateZeroesAtTheEnd(big_decimal *value) {
@@ -20,28 +20,41 @@ void assignValue(big_decimal *v1, big_decimal v2) {
   memcpy(v1, &v2, sizeof(v2));
 }
 
-int longDivision(big_decimal value1, big_decimal value2, big_decimal *result) {
-  /* Searching for a number for the first digit in the quotient
-   * Without handling exponents and remainder */
+int findPosFirstDigit(big_decimal dec) {
   int posFirstDigit = -1;
+  for (int i = 6 * 32 - 1; i >= 0 && posFirstDigit == -1; --i)
+    if (getBit(dec, i)) posFirstDigit = i;
+  return posFirstDigit;
+}
+
+/* Return value:
+ * 0 Ok Without remainder
+ * 1 Ok With remainder
+ * 3 Division by zero
+ */
+int longDivision(big_decimal value1, big_decimal value2, big_decimal *result) {
+  /* Without handling exponents and remainder */
   big_decimal result_ = *result;
   int rv = 0;
-  for (int i = 6 * 32 - 1; i >= 0 && posFirstDigit == -1; --i)
-    if (getBit(value1, i)) posFirstDigit = i;
   bit_t br = TRUE;
+  /* Check that the value2 is not equal zero */
+  if (bigDecimalIsLess(value2, (big_decimal){}) == 2)
+    rv = 3;
+  /* Searching for a number for the first digit in the quotient */
+  int currPosInNum = findPosFirstDigit(value1);
+  
   big_decimal absValue1 = value1;
   setSign(&absValue1, 0);
   setExp(&absValue1, 0);
   big_decimal absValue2 = value2;
   setSign(&absValue2, 0);
   setExp(&absValue2, 0);
-  int currPosInNum = posFirstDigit;
   big_decimal subtrahend = absValue2;
   setSign(&subtrahend, 1);
   /* TODO: Need to handle situation when at the begin divisible < divisor (3 /
    * 33) */
   big_decimal remainder = {};
-  while (currPosInNum >= 0) {
+  while (currPosInNum >= 0 && !rv) {
     big_decimal tmpRes = {};
     shiftLeft(&remainder, 1);
     setBit(&remainder, 0, getBit(absValue1, currPosInNum));
@@ -53,7 +66,8 @@ int longDivision(big_decimal value1, big_decimal value2, big_decimal *result) {
     }
     --currPosInNum;
   }
-  assignValue(result, result_);
+  if (rv != 3)
+    assignValue(result, result_);
   return rv;
 }
 
@@ -119,13 +133,15 @@ bit_t fromBigDecimal(big_decimal bigValue, s21_decimal *value) {
   }
 }
 
+/* Return value:
+ * 1 value1 < value2
+ * 0 value1 > value2
+ * 2 value1 == value2
+ */
 int bigDecimalIsLess(big_decimal value1, big_decimal value2) {
   /* Tested */
   bit_t rv = FALSE;
-  /* rv = 1 value1 < value2
-   * rv = 0 value1 > value2
-   * rv = 2 value1 == value2
-   */
+  
   bit_t sign1 = getSign(value1);
   bit_t sign2 = getSign(value2);
   if (sign1 == sign2) {
@@ -291,6 +307,7 @@ void setSign(big_decimal *value, bit_t sign) {
 }
 
 void alignmentExp(big_decimal *value1, big_decimal *value2) {
+  /* Tested */
   unsigned exp1 = getExp(*value1);
   unsigned exp2 = getExp(*value2);
   while (exp1 < exp2) {
@@ -347,6 +364,8 @@ int shiftRight(big_decimal *num, int shift) {
   if (!ec) *num = converted;
   return ec;
 }
+
+/* //////////////////// Accessory print //////////////////// */
 
 void reverse(char str[], int length) {
   int start = 0;

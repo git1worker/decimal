@@ -5,13 +5,14 @@
 
 #include "s21_helpers.h"
 
+/* Signs are should be handled only inside of these functions !!! */
+
 /*
   0 - OK
   1 - число слишком велико или равно бесконечности
   2 - число слишком мало или равно отрицательной бесконечности
   3 - деление на 0
 */
-
 int s21_add(s21_decimal value_1, s21_decimal value_2, s21_decimal *result) {
   s21_decimal result_ = *result;
   int rv = 0;
