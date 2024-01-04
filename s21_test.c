@@ -166,6 +166,88 @@ START_TEST(test_s21_alignmentExp2) {
 }
 END_TEST;
 
+START_TEST(test_s21_helpesSummSub) {
+  big_decimal dec = {.bits = {0b11000001110110101111110110011110,
+                              0b00111110001001010000001001100001,
+                              0b11000001110110101111110110011110, 0, 0, 0, 0}};
+  big_decimal dec2 = {.bits = {0b11000001110110101111110110011110,
+                               0b00111110001001010000001001100001,
+                               0b00111110001001010000001001100001, 0, 0, 0, 0}};
+  big_decimal dec3 =
+      (big_decimal){.bits = {0b10000011101101011111101100111100,
+                             0b01111100010010100000010011000011,
+                             0b11111111111111111111111111111111, 0, 0, 0, 0}};
+  big_decimal res = {};
+  helperSummSub(dec, dec2, &res);
+
+  ck_assert(!memcmp(&res, &dec3, sizeof(dec)));
+}
+END_TEST;
+
+START_TEST(test_s21_helpesSummSub2) {
+  big_decimal dec = {.bits = {0b11000001110110101111110110011110,
+                              0b00111110001001010000001001100001,
+                              0b11000001110110101111110110011110, 0, 0, 0, 0}};
+  big_decimal dec2 = {.bits = {0b11000001110110101111110110011110,
+                               0b00111110001001010000001001100001,
+                               0b00111110001001010000001001100001, 0, 0, 0, 0}};
+
+  big_decimal dec3 = (big_decimal){
+      .bits = {0, 0, 0b10000011101101011111101100111101, 0, 0, 0, 0}};
+  setSign(&dec, 1);
+  setSign(&dec3, 1);
+  big_decimal res = {};
+  helperSummSub(dec, dec2, &res);
+
+  ck_assert(!memcmp(&res, &dec3, sizeof(dec)));
+}
+END_TEST;
+
+START_TEST(test_s21_helpesSummSub3) {
+  big_decimal dec = {.bits = {0b11000001110110101111110110011110,
+                              0b00111110001001010000001001100001,
+                              0b11000001110110101111110110011110, 0, 0, 0, 0}};
+  big_decimal dec2 = {.bits = {0b11000001110110101111110110011110,
+                               0b00111110001001010000001001100001,
+                               0b00111110001001010000001001100001, 0, 0, 0, 0}};
+  big_decimal dec3 =
+      (big_decimal){.bits = {0b10000011101101011111101100111100,
+                             0b01111100010010100000010011000011,
+                             0b11111111111111111111111111111111, 0, 0, 0, 0}};
+  setSign(&dec, 1);
+  setSign(&dec2, 1);
+  setSign(&dec3, 1);
+  big_decimal res = {};
+  helperSummSub(dec, dec2, &res);
+
+  ck_assert(!memcmp(&res, &dec3, sizeof(dec)));
+}
+END_TEST;
+
+START_TEST(test_s21_truncZeroes) {
+  // TODO
+  big_decimal dec = {.bits = {0b11010110110110000, // 110000
+                              0,
+                              0, 0, 0, 0, 0}};
+  big_decimal dec2 = {.bits = {0b10101011111000, // 11000
+                               0,
+                               0, 0, 0, 0, 0}};
+  big_decimal dec3 = 
+      (big_decimal){.bits = {0b10001001100, // 1100
+                             0,
+                             0, 0, 0, 0, 0}};
+  big_decimal dec3 = 
+      (big_decimal){.bits = {0b10001001100, // 1100
+                             0,
+                             0, 0, 0, 0, 0}};
+  setExp(&dec, 5);
+  setExp(&dec2, 5);
+  setExp(&dec3, 5);
+  truncateZeroesAtTheEndAfterExp(&dec);
+  ck_assert(!memcmp(&res, &dec3, sizeof(dec)));
+}
+END_TEST;
+
 int main(void) {
   Suite *s = suite_create("s21_suite");
   TCase *tc = tcase_create("");
@@ -180,6 +262,10 @@ int main(void) {
   tcase_add_test(tc, test_s21_mulToBigDec2);
   tcase_add_test(tc, test_s21_alignmentExp);
   tcase_add_test(tc, test_s21_alignmentExp2);
+  tcase_add_test(tc, test_s21_helpesSummSub);
+  tcase_add_test(tc, test_s21_helpesSummSub2);
+  tcase_add_test(tc, test_s21_helpesSummSub3);
+  tcase_add_test(tc, test_s21_truncZeroes);
 
   suite_add_tcase(s, tc);
   SRunner *sr;

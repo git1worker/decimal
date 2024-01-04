@@ -10,14 +10,12 @@
  * Signs are processing before these functions
  */
 
-void truncateZeroesAtTheEnd(big_decimal *value) {
-  // TODO:
-  /* Exponent = 0
-   * longDivision */
-}
-
-void assignValue(big_decimal *v1, big_decimal v2) {
-  memcpy(v1, &v2, sizeof(v2));
+void truncateZeroesAtTheEndAfterExp(big_decimal *value) {
+  big_decimal result = *value;
+  big_decimal result_ = {};
+  while (getExp(result) && longDivision(result, DECIMALTEN, &result_) == 0)
+    result = result_, setExp(&result, getExp(result) - 1);
+  *value = result;
 }
 
 int findPosFirstDigit(big_decimal dec) {
@@ -33,26 +31,28 @@ int findPosFirstDigit(big_decimal dec) {
  * 3 Division by zero
  */
 int longDivision(big_decimal value1, big_decimal value2, big_decimal *result) {
-  /* Without handling exponents and remainder */
+  /* Here the exponents should be zero */
+  /* The example of obtaining a fractional part
+   *                 dec        bin
+   * 245   / 8    = 30.625 <=> 11110.101
+   * 0.101 * 1010 = 6.25   <=> 110.01
+   * 0.01  * 1010 = 2.5    <=> 10.1
+   * 0.1   * 1010 = 5      <=> 101
+  
+  */
+
+  /* Without handling remainder */
   big_decimal result_ = *result;
   int rv = 0;
   bit_t br = TRUE;
-  /* Check that the value2 is not equal zero */
-  if (bigDecimalIsLess(value2, (big_decimal){}) == 2)
-    rv = 3;
-  /* Searching for a number for the first digit in the quotient */
   int currPosInNum = findPosFirstDigit(value1);
-  
+  /* Check that the value2 is not equal zero */
+  if (currPosInNum != -1) rv = 3;
   big_decimal absValue1 = value1;
   setSign(&absValue1, 0);
-  setExp(&absValue1, 0);
-  big_decimal absValue2 = value2;
-  setSign(&absValue2, 0);
-  setExp(&absValue2, 0);
-  big_decimal subtrahend = absValue2;
+  big_decimal subtrahend = value2;
   setSign(&subtrahend, 1);
-  /* TODO: Need to handle situation when at the begin divisible < divisor (3 /
-   * 33) */
+  /* Handling the integer part */
   big_decimal remainder = {};
   while (currPosInNum >= 0 && !rv) {
     big_decimal tmpRes = {};
@@ -62,12 +62,16 @@ int longDivision(big_decimal value1, big_decimal value2, big_decimal *result) {
     shiftLeft(&result_, 1);
     if (!getSign(tmpRes)) { /* if the value is >= 0 */
       setBit(&result_, 0, 1);
-      assignValue(&remainder, tmpRes);
+      remainder = tmpRes;
     }
     --currPosInNum;
   }
-  if (rv != 3)
-    assignValue(result, result_);
+  /* Handling the fraction part */
+  while (findPosFirstDigit(remainder) != -1) {
+    
+  }
+
+  if (rv != 3) *result = result_;
   return rv;
 }
 
@@ -141,7 +145,7 @@ bit_t fromBigDecimal(big_decimal bigValue, s21_decimal *value) {
 int bigDecimalIsLess(big_decimal value1, big_decimal value2) {
   /* Tested */
   bit_t rv = FALSE;
-  
+
   bit_t sign1 = getSign(value1);
   bit_t sign2 = getSign(value2);
   if (sign1 == sign2) {
@@ -181,6 +185,10 @@ int bigDecimalIsGreater(big_decimal value1, big_decimal value2) {
   else if (!rv)
     rv = 1;
   return rv;
+}
+
+int bigDecimalIsEqual(big_decimal v1, big_decimal v2) {
+  return bigDecimalIsLess(v1, v2) == 2;
 }
 
 void mulToBigDecimal(big_decimal value1, big_decimal value2,

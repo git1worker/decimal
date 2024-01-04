@@ -36,7 +36,7 @@ void mulToBigDecimal(big_decimal value1, big_decimal value2,
 void alignmentExp(big_decimal *value1, big_decimal *value2);
 void toBigDecimal(s21_decimal value1, big_decimal *bigValue1);
 bit_t fromBigDecimal(big_decimal bigValue, s21_decimal *value);
-void truncateZeroesAtTheEnd(big_decimal *value);
+void truncateZeroesAtTheEndAfterExp(big_decimal *value);
 int shiftRight(big_decimal *num, int shift);
 int longDivision(big_decimal value1, big_decimal value2, big_decimal *result);
 
