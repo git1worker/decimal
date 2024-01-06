@@ -13,8 +13,10 @@
 void truncateZeroesAtTheEndAfterExp(big_decimal *value) {
   big_decimal result = *value;
   big_decimal result_ = {};
-  while (getExp(result) && longDivision(result, DECIMALTEN, &result_) == 0)
-    result = result_, setExp(&result, getExp(result) - 1);
+  while (getExp(result) && longDivision(result, DECIMALTEN, &result_) == 0) {
+    int e = getExp(result) - 1;
+    result = result_, setExp(&result, e);
+  }
   *value = result;
 }
 
@@ -38,16 +40,16 @@ int longDivision(big_decimal value1, big_decimal value2, big_decimal *result) {
    * 0.101 * 1010 = 6.25   <=> 110.01
    * 0.01  * 1010 = 2.5    <=> 10.1
    * 0.1   * 1010 = 5      <=> 101
-  
+
   */
 
   /* Without handling remainder */
-  big_decimal result_ = *result;
+  big_decimal result_ = {};
   int rv = 0;
   bit_t br = TRUE;
   int currPosInNum = findPosFirstDigit(value1);
   /* Check that the value2 is not equal zero */
-  if (currPosInNum != -1) rv = 3;
+  if (findPosFirstDigit(value2) == -1) rv = 3;
   big_decimal absValue1 = value1;
   setSign(&absValue1, 0);
   big_decimal subtrahend = value2;
@@ -66,11 +68,10 @@ int longDivision(big_decimal value1, big_decimal value2, big_decimal *result) {
     }
     --currPosInNum;
   }
-  /* Handling the fraction part */
-  while (findPosFirstDigit(remainder) != -1) {
-    
-  }
-
+  /* TODO: Handling the fraction part */
+  // while (findPosFirstDigit(remainder) != -1) {
+  // }
+  if (findPosFirstDigit(remainder) != -1) rv = 1;
   if (rv != 3) *result = result_;
   return rv;
 }
@@ -126,7 +127,7 @@ bit_t fromBigDecimal(big_decimal bigValue, s21_decimal *value) {
     rv = 1;
   else if (bigDecimalIsLess(
                bigValue, (big_decimal){.bits = {UINTMAX, UINTMAX, UINTMAX, 0, 0,
-                                                0, (UINTMAX + 1) / 2}}) == 1)
+                                                0, (UINTMAX + 1L) / 2}}) == 1)
     rv = 2;
   else {
     setSign(&bigValue, sign);
@@ -135,6 +136,7 @@ bit_t fromBigDecimal(big_decimal bigValue, s21_decimal *value) {
     value->bits[1] = bigValue.bits[1];
     value->bits[2] = bigValue.bits[2];
   }
+  return rv;
 }
 
 /* Return value:
@@ -154,7 +156,7 @@ int bigDecimalIsLess(big_decimal value1, big_decimal value2) {
     bit_t br = TRUE;
     // print_decimal(value1);
     // print_decimal(value2);
-    for (int i = (sizeof(big_decimal) - sizeof(unsigned)) * 8 - 1; i >= 0 && br;
+    for (int i = (sizeof(big_decimal) - sizeof(int)) * 8 - 1; i >= 0 && br;
          --i) {
       bit_t b1 = getBit(value1, i);
       bit_t b2 = getBit(value2, i);

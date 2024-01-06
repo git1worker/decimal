@@ -19,16 +19,16 @@ int s21_add(s21_decimal value_1, s21_decimal value_2, s21_decimal *result) {
   big_decimal bigValue1 = {}, bigValue2 = {}, bigResult = {};
   toBigDecimal(value_1, &bigValue1);
   toBigDecimal(value_2, &bigValue2);
-  /* Need to truncate, if the values has view - 12.20 or 1.40, 
-   * but should has the - 12.2 and 1.4. 
+  /* Need to truncate, if the values has view - 12.20 or 1.40,
+   * but should has the - 12.2 and 1.4.
    * Or the view - 0.00 with an excess exponent */
   truncateZeroesAtTheEndAfterExp(&bigValue1);
   truncateZeroesAtTheEndAfterExp(&bigValue2);
   alignmentExp(&bigValue1, &bigValue2);
 
   helperSummSub(bigValue1, bigValue2, &bigResult);
-  
-  truncateZeroesAtTheEnd(&bigResult);
+
+  truncateZeroesAtTheEndAfterExp(&bigResult);
   rv = fromBigDecimal(bigResult, &result_);
   if (!rv) *result = result_;
   return rv;
@@ -43,7 +43,7 @@ int s21_sub(s21_decimal value_1, s21_decimal value_2, s21_decimal *result) {
   setSign(&bigValue1, !getSign(bigValue2));
   alignmentExp(&bigValue1, &bigValue2);
   helperSummSub(bigValue1, bigValue2, &bigResult);
-  truncateZeroesAtTheEnd(&bigResult);
+  truncateZeroesAtTheEndAfterExp(&bigResult);
   rv = fromBigDecimal(bigResult, &result_);
   if (!rv) *result = result_;
   return rv;

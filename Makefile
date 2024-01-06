@@ -13,15 +13,21 @@ endif
 all: clean s21_string.a test gcov_report
 	
 check: 
-	find . -type f \( -name "*.c" -o -name "*.h" \) -exec clang-format --style=Google -i {} +
+	find . -name "*.c" -exec clang-format --style=Google -i {} \;
+	find . -name "*.h" -exec clang-format --style=Google -i {} \;
 
 clean:
 	rm -f *.o *.a *.out *.gcda *.gcno *.info *.out
 
+s21_decimal.o :
+	${CMPL} ${FLAGS} -o s21_decimal.o s21_decimal.c
 
-s21_string.a : s21_string.o s21_sprintf.o s21_citoa.o s21_sscanf.o
-	ar r libs21_string.a s21_string.o s21_sprintf.o s21_citoa.o s21_sscanf.o
-	ar r s21_string.a s21_string.o s21_sprintf.o s21_citoa.o s21_sscanf.o
+s21_helpers.o :
+	${CMPL} ${FLAGS} -o s21_decimal.o s21_helpers.c	
+
+s21_decimal.a : 
+	ar r libs21_decimal.a s21_decimal.o s21_helpers.o
+	ar r s21_decimal.a s21_decimal.o s21_helpers.o
 
 cppcheck:
 	cppcheck --enable=all --suppress=missingIncludeSystem *.c
@@ -31,4 +37,4 @@ test : clean check
 
 	
 test2 : clean check
-	${CMPL} ${FLAGS} -o test2 s21_decimal.c s21_helpers.c test.c
+	${CMPL} ${FLAGS} -o test2 s21_decimal.c s21_helpers.c test.c 
