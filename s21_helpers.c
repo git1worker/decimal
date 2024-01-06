@@ -316,6 +316,11 @@ void setSign(big_decimal *value, bit_t sign) {
   setBit(value, 32 * 7 - 1, sign);
 }
 
+void setSign_(s21_decimal *value, bit_t sign) {
+  value->bits[3] = sign ? value->bits[3] | (unsigned)((UINTMAX + 1L) / 2)
+                        : value->bits[3] & ~(unsigned)((UINTMAX + 1L) / 2);
+}
+
 void alignmentExp(big_decimal *value1, big_decimal *value2) {
   /* Tested */
   unsigned exp1 = getExp(*value1);
